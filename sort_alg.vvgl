@@ -27,7 +27,7 @@ architecture rtl of sort_alg is
   type data_array is array (0 to 1023) of std_logic_vector(15 downto 0); -- max number of transactions is 1024
   signal data, sort_data : data_array := (others => (others => '0'));
    -- States for FSM
-  type state_type is (idle, collect, assign, compare, check, increment, valid, ready, drive, increment_d);
+  type state_type is (idle, collect, assign, compare, check, increment, valid, ready, drive_one, drive_two);
   signal curr_state, next_state: state_type;
   -- Local signals
   signal i, j, d: integer := 0; -- Increment integers
@@ -54,6 +54,8 @@ architecture rtl of sort_alg is
             aout_tready <= '0';
             aout_tlast <= '0';
             count <= 0;
+            i <= 0;
+            j <= 0;
             data <= (others => (others => '0'));
             if((ain_tvalid = '1') and (ain_tready = '1'))then
             	next_state <= collect;
@@ -102,18 +104,20 @@ architecture rtl of sort_alg is
         	next_state <= ready;
         when ready =>
             aout_tready <= '1';
-            next_state <= drive;
-        when drive =>
+            next_state <= drive_one;
+        when drive_one =>
             aout_tdata <= data(d);
+            d <= d + 1;
+            next_state <= drive_two;
+        when drive_two =>
+            aout_tdata <= data(d);
+            d <= d + 1;
             if(d /= count-1) then
-                next_state <= increment_d;
+                next_state <= drive_one;
             else
                 aout_tlast <= '1';
                 d <= 0;
             end if;
-        when increment_d =>
-            d <= d + 1;
-            next_state <= drive;
     end case;
 	end process;
 end rtl;
