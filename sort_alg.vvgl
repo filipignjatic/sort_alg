@@ -30,7 +30,7 @@ architecture rtl of sort_alg is
   type state_type is (idle, collect, assign, compare, check, increment, valid, ready, drive_one, drive_two);
   signal curr_state, next_state: state_type;
   -- Local signals
-  signal i, j, d: integer := 0; -- Increment integers
+  signal i, j, d, x: integer := 0; -- Increment integers
   signal count: integer range 0 to 1023; -- field for number of transactions
   signal tmp_i, tmp_j: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
    
@@ -56,6 +56,7 @@ architecture rtl of sort_alg is
             count <= 0;
             i <= 0;
             j <= 0;
+            d <= 0;
             data <= (others => (others => '0'));
             if((ain_tvalid = '1') and (ain_tready = '1'))then
             	next_state <= collect;
@@ -106,16 +107,23 @@ architecture rtl of sort_alg is
             aout_tready <= '1';
             next_state <= drive_one;
         when drive_one =>
-            aout_tdata <= data(d);
-            d <= d + 1;
-            next_state <= drive_two;
-        when drive_two =>
-            aout_tdata <= data(d);
-            d <= d + 1;
             if(d /= count-1) then
-                next_state <= drive_one;
+                aout_tdata <= data(d);
+                d <= d + 1;
+                next_state <= drive_two;
             else
                 aout_tlast <= '1';
+                aout_tdata <= data(d);
+                d <= 0;
+            end if;
+        when drive_two =>
+            if(d /= count - 1) then
+                aout_tdata <= data(d);
+                next_state <= drive_one;
+                d <= d + 1;
+            else
+                aout_tlast <= '1';
+                aout_tdata <= data(d);
                 d <= 0;
             end if;
     end case;
