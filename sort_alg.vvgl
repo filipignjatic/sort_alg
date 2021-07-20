@@ -42,11 +42,6 @@ architecture rtl of sort_alg is
     	curr_state <= idle;
     elsif(rising_edge(clk)) then
     	curr_state <= next_state;
-	if(((ain_tvalid = '1') and (ain_tready = '1')) and ain_tlast = '0') then
-		data(count) <= ain_tdata;
-	end if;
-	elsif(ain_tlast = '1') then
-		next
     end if;
     end process;
     
