@@ -137,8 +137,6 @@ architecture rtl of sort_alg is
             if(drive_done = '1') then
                 next_state <= idle;
                 aout_tlast <= '1';
-            else
-                drive_data <= '1';
             end if;
     end case;
     end process;
