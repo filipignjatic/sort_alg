@@ -10,13 +10,13 @@ entity sort_alg is
  
     -- Inputs
     ain_tvalid   : in  std_logic;
-    ain_tready	 : in  std_logic;
+    aout_tready  : in std_logic;
     ain_tdata 	 : in  std_logic_vector(15 downto 0);
     ain_tlast    : in  std_logic;
  
     -- Outputs
    	aout_tvalid  : out std_logic;
-    aout_tready  : out std_logic;
+    ain_tready	 : out  std_logic;
     aout_tdata   : out std_logic_vector(15 downto 0);
     aout_tlast   : out std_logic
     );
@@ -27,14 +27,14 @@ architecture rtl of sort_alg is
   type data_array is array (0 to 1023) of std_logic_vector(15 downto 0); -- max number of transactions is 1024
   signal data, sort_data : data_array := (others => (others => '0'));
    -- States for FSM
-  type state_type is (idle,transfer, increment_t, assign, compare, check, increment, drive_tvalid, drive_tready, drive_tdata);
+  type state_type is (idle,drive_tready, collect_done, transfer, increment_t, assign, compare, check, increment, drive_tvalid,  drive_tdata);
   signal curr_state, next_state: state_type;
   -- Local signals
   signal i, j, d, x: integer := 0; -- Increment integers
   signal count: integer range 0 to 1023; -- field for number of transactions
   signal tmp_i, tmp_j: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
   -- Local signals for driving data
-  signal drive_ready, drive_valid, drive_data, drive_done: std_logic;
+  signal write_en, drive_done: std_logic;
    
   begin
   
@@ -42,68 +42,55 @@ architecture rtl of sort_alg is
     begin
     if(rst = '1') then
     	curr_state <= idle;
-    	d <= 0;
-    	count <= 0;
-    	data <= (others => (others => '0'));
-    	drive_done <= '0';
-    	aout_tdata <= (others => '0');
-    	aout_tvalid <= '0';
-    	aout_tready <= '0';
-    	aout_tlast <= '0';
     else
        if(rising_edge(clk)) then
     	curr_state <= next_state;
     	-- collecting data
-        if((ain_tvalid = '1') and (ain_tready = '1') and ain_tlast = '0') then
+        if(write_en = '1' and ain_tlast = '0') then
             data(count) <= ain_tdata;
             count <= count + 1;
             drive_done <= '0';
 	    end if;
-	    -- driving valid signal
-	    if(curr_state = drive_tvalid) then
-	       aout_tvalid <= '1';
-	    end if;
-	    -- driving ready signal
-	    if(curr_state = drive_tready) then
-	       aout_tready <= '1';
-        end if;
         -- driving data
-	    if(curr_state = drive_tdata) then
+	    if(write_en = '0' and aout_tready = '1') then
                if(d /= count-1) then
                    aout_tdata <= sort_data(d);
                    d <= d + 1;
                    drive_done <= '0';
                else
                     aout_tdata <= sort_data(d);
-                    aout_tlast <= '1';
                     drive_done <= '1';
                end if; 
-	    end if;
-	    -- driving data done
-	    if(drive_done = '1') then
-            aout_tlast <= '0';
-            aout_tvalid <= '0';
-            aout_tready <= '0';
-            drive_done <= '1';
 	    end if;
         end if;
     end if;
     end process;
     
     
-     process(curr_state, ain_tlast, drive_done) is
+     process(curr_state, ain_tlast, ain_tvalid, drive_done) is
     begin
     case curr_state is
         when idle =>
+            aout_tlast <= '0';
+            aout_tvalid <= '0';
             tmp_i <= (others => '0');
             tmp_j <= (others => '0');
-            drive_ready <= '0';
             sort_data <= (others => (others => '0'));
-             if(ain_tlast = '1') then
-                next_state <= transfer;
-            else
-                next_state <= idle;
+            if(ain_tvalid = '1') then
+                next_state <= drive_tready;
             end if;
+        when drive_tready =>
+            if(ain_tlast = '1') then
+                next_state <= collect_done;
+            else
+                ain_tready <= '1';
+                write_en <= '1';
+                next_state <= drive_tready;
+            end if;
+        when collect_done =>
+                ain_tready <= '0';
+                write_en <= '0';
+                next_state <= transfer;
         when transfer =>
             sort_data(x) <= data(x);
             if(x /= count) then
@@ -144,17 +131,12 @@ architecture rtl of sort_alg is
                     next_state <= assign;
                 end if;
         when drive_tvalid =>
-            drive_valid <= '1';
-            next_state <= drive_tready;
-        when drive_tready =>
-            drive_ready <= '1';
+            aout_tvalid <= '1';
             next_state <= drive_tdata;
         when drive_tdata =>
             if(drive_done = '1') then
                 next_state <= idle;
-                drive_data <= '0';
-                drive_ready <= '0';
-                drive_valid <= '0';
+                aout_tlast <= '1';
             else
                 drive_data <= '1';
             end if;
