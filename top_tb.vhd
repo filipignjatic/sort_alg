@@ -5,11 +5,9 @@ entity top_tb is
 end entity top_tb;
 
 architecture beh of top_tb is
-    -- clock and reset
-	  signal clk_s: std_logic;
+	signal clk_s: std_logic;
     signal rst_s: std_logic;
     
-    -- inputs
     signal ain_tvalid_s: std_logic;
     signal ain_tready_s: std_logic;
     signal ain_tdata_s:  std_logic_vector ( 15 downto 0);
@@ -20,7 +18,7 @@ architecture beh of top_tb is
     signal aout_tready_s: std_logic;
     signal aout_tdata_s:  std_logic_vector ( 15 downto 0);
     signal aout_tlast_s:  std_logic;
-    
+    signal count: integer range 0 to 1023;
     begin
     	dut: entity work.sort_alg(rtl)
         	port map( 
@@ -41,22 +39,52 @@ architecture beh of top_tb is
         	wait for 50 ns;
         end process;
         
+        tready_send: process(clk_s)
+        begin
+            if(rising_edge(clk_s)) then
+                if(aout_tvalid_s = '1') then
+                    count <= count + 1;
+                    if(count = 13) then
+                        aout_tready_s <= '0';
+                        count <= 0;
+                     else
+                        aout_tready_s <= '1';
+                    end if;
+                end if;
+            end if;
+        end process;
+        
+        
         stim_gen: process
         begin
-        rst_s <= '0';
-        ain_tready_s <= '0';
         ain_tvalid_s <= '0';
+        ain_tlast_s <= '0';
+        rst_s <= '1';
+        ain_tdata_s <= (others => '0');
+        wait for 50 ns;
+        rst_s <= '0';
         wait for 100ns;
-        ain_tdata_s (3 downto 0) <= x"A";
-        ain_tdata_s (15 downto 4) <= (others => '0');
         ain_tvalid_s <= '1';
-        wait until rising_edge(clk_s);
-        ain_tready_s <= '1';
         wait until rising_edge(clk_s);
         ain_tdata_s (3 downto 0) <= x"C";
         ain_tdata_s (15 downto 4) <= (others => '0');
         wait until rising_edge(clk_s);
         ain_tdata_s (3 downto 0) <= x"5";
+        ain_tdata_s (15 downto 4) <= (others => '0');
+        wait until rising_edge(clk_s);
+        ain_tdata_s (3 downto 0) <= x"4";
+        ain_tdata_s (15 downto 4) <= (others => '0');
+        wait until rising_edge(clk_s);
+        ain_tdata_s (3 downto 0) <= x"8";
+        ain_tdata_s (15 downto 4) <= (others => '0');
+        wait until rising_edge(clk_s);
+        ain_tdata_s (3 downto 0) <= x"2";
+        ain_tdata_s (15 downto 4) <= (others => '0');
+        wait until rising_edge(clk_s);
+        ain_tdata_s (3 downto 0) <= x"A";
+        ain_tdata_s (15 downto 4) <= (others => '0');
+        wait until rising_edge(clk_s);
+        ain_tdata_s (3 downto 0) <= x"9";
         ain_tdata_s (15 downto 4) <= (others => '0');
         wait until rising_edge(clk_s);
         ain_tdata_s (3 downto 0) <= x"4";
@@ -80,7 +108,6 @@ architecture beh of top_tb is
         wait until rising_edge(clk_s);
         ain_tlast_s <= '0';
         ain_tvalid_s <= '0';
-        ain_tready_s <= '0';
         wait;
         end process;
 end architecture beh;
