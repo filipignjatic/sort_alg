@@ -38,32 +38,38 @@ architecture rtl of sort_alg is
    
   begin
   
-  	process(clk, rst) is 
+  
+  
+    FSM_PROC:process(clk, rst) is
     begin
-    if(rst = '1') then
-    	curr_state <= idle;
-    else
-       if(rising_edge(clk)) then
-    	curr_state <= next_state;
-    	-- collecting data
-        if(write_en = '1' and ain_tlast = '0') then
-            data(count) <= ain_tdata;
-            count <= count + 1;
-            drive_done <= '0';
-	    end if;
-        -- driving data
-	    if(write_en = '0' and aout_tready = '1') then
-               if(d /= count-1) then
-                   aout_tdata <= sort_data(d);
-                   d <= d + 1;
-                   drive_done <= '0';
-               else
-                    aout_tdata <= sort_data(d);
-                    drive_done <= '1';
-               end if; 
-	    end if;
+        if(rst = '1') then
+            curr_state <= idle;
+        elsif(rising_edge(clk)) then
+            curr_state <= next_state;
         end if;
-    end if;
+    end process;
+    
+  	MEMORY_PROC:process(clk) is 
+    begin
+        if(rising_edge(clk)) then
+            -- collecting data
+            if(write_en = '1' and ain_tlast = '0') then
+                data(count) <= ain_tdata;
+                count <= count + 1;
+                drive_done <= '0';
+            end if;
+            -- driving data
+            if(write_en = '0' and aout_tready = '1') then
+                   if(d /= count-1) then
+                       aout_tdata <= sort_data(d);
+                       d <= d + 1;
+                       drive_done <= '0';
+                   else
+                        aout_tdata <= sort_data(d);
+                        drive_done <= '1';
+                   end if; 
+            end if;
+        end if;
     end process;
     
     
