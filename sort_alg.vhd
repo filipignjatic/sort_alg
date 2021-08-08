@@ -34,7 +34,7 @@ architecture rtl of sort_alg is
   signal counter, addr: integer range 0 to 1023; -- field for number of transactions
   signal tmp_i, tmp_j, mem_data: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
   -- Local signals for driving data
-  signal write_en, read_en, start_counter,  drive_done: std_logic;
+  signal write_en, read_en, start_counter,  drive_done,transfer_tmp_i, transfer_tmp_j: std_logic;
    
   begin
   
@@ -52,12 +52,16 @@ architecture rtl of sort_alg is
   	MEMORY_PROC:process(clk) is 
     begin
         if(rising_edge(clk)) then
-            -- collecting data
             if(write_en = '1') then
                 data(addr) <= mem_data;
-            -- driving data
             elsif(read_en = '1') then
                 aout_tdata <= data(counter);
+            end if;
+            if(transfer_tmp_i = '1') then
+                tmp_i <= data(i);
+            end if;
+            if(transfer_tmp_j = '1') then
+                tmp_j <= data(i+1);
             end if;
         end if;
     end process;
@@ -69,7 +73,7 @@ architecture rtl of sort_alg is
                 counter <= counter + 1;
             end if;
             
-            if(ain_tlast = '1') then -- Block for decrement counter for one, makeing it right
+            if(ain_tlast = '1') then -- Block for decrement counter by one, makeing it right because counter going 1+ more then should
                 counter <= counter - 1;
             end if;
             
@@ -90,8 +94,8 @@ architecture rtl of sort_alg is
         when idle =>
             aout_tlast <= '0';
             aout_tvalid <= '0';
-            tmp_i <= (others => '0');
-            tmp_j <= (others => '0');
+           -- tmp_i <= (others => '0');
+            --tmp_j <= (others => '0');
             read_en <= '0';
             write_en <= '0';
             if(ain_tvalid = '1') then
@@ -115,12 +119,14 @@ architecture rtl of sort_alg is
                 write_en <= '0';
                 next_state <= assign_first;
         when assign_first =>
-           tmp_i <= data(i);
+           transfer_tmp_i <= '1';
            next_state <= assign_second;
         when assign_second =>
-           tmp_j <= data(i+1);
+            transfer_tmp_i <= '0';
+            transfer_tmp_j <= '1';
            next_state <= compare;
         when compare =>
+            transfer_tmp_j <= '0';
             if(tmp_i < tmp_j) then
                 next_state <= swap_first_addr;
             else
