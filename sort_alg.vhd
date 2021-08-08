@@ -94,8 +94,6 @@ architecture rtl of sort_alg is
         when idle =>
             aout_tlast <= '0';
             aout_tvalid <= '0';
-           -- tmp_i <= (others => '0');
-            --tmp_j <= (others => '0');
             read_en <= '0';
             write_en <= '0';
             if(ain_tvalid = '1') then
