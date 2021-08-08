@@ -18,7 +18,7 @@ architecture beh of top_tb is
     signal aout_tready_s: std_logic;
     signal aout_tdata_s:  std_logic_vector ( 15 downto 0);
     signal aout_tlast_s:  std_logic;
-    
+    signal count: integer range 0 to 1023;
     begin
     	dut: entity work.sort_alg(rtl)
         	port map( 
@@ -43,12 +43,17 @@ architecture beh of top_tb is
         begin
             if(rising_edge(clk_s)) then
                 if(aout_tvalid_s = '1') then
-                    aout_tready_s <= '1';
+                    if(aout_tlast_s = '1') then
+                        aout_tready_s <= '0';
+                     else
+                        aout_tready_s <= '1';
+                    end if;
                 else
                     aout_tready_s <= '0';
                 end if;
             end if;
         end process;
+        
         
         stim_gen: process
         begin
