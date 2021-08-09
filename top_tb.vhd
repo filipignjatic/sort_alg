@@ -43,13 +43,13 @@ architecture beh of top_tb is
         begin
             if(rising_edge(clk_s)) then
                 if(aout_tvalid_s = '1') then
-                    count <= count + 1;
-                    if(count = 13) then
+                    if(aout_tlast_s = '1') then
                         aout_tready_s <= '0';
-                        count <= 0;
                      else
                         aout_tready_s <= '1';
                     end if;
+                else
+                    aout_tready_s <= '0';
                 end if;
             end if;
         end process;
