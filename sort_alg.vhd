@@ -70,6 +70,7 @@ architecture rtl of sort_alg is
         if(rising_edge(clk)) then
             if(start_counter = '1') then
                 cnt <= cnt + 1;
+                tmp_counter <= tmp_counter + 1;
             else
                 cnt <= (others => '0');
             end if;
@@ -131,14 +132,13 @@ architecture rtl of sort_alg is
             if(ain_tlast = '1') then
                 mem_data <= ain_tdata;
                 addr <= cnt;
-                tmp_counter <= cnt;
                 next_state <= collect_done;
             else
                 mem_data <= ain_tdata;
                 addr <= cnt;
-                start_counter <= '1';
                 next_state <= drive_tready;
             end if;
+            start_counter <= '1';
             ain_tready <= '1';
             write_en <= '1';
         when collect_done =>
