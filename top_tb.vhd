@@ -7,20 +7,23 @@ entity top_tb is
 end entity top_tb;
 
 architecture beh of top_tb is
+    -- Clock and reset local signals
 	signal clk_s: std_logic;
     signal rst_s: std_logic;
     
+    -- Local signals for counter and decrement
     signal data_signal: std_logic_vector(15 downto 0) := "0000000000111111";
-    signal data_subb: std_logic_vector(15 downto 0) := "0000000000000001";
     signal counter: std_logic_vector(9 downto 0) := (others => '0');
+    
+    -- Inputs
     signal ain_tvalid_s: std_logic;
-    signal ain_tready_s: std_logic;
+    signal aout_tready_s: std_logic;
     signal ain_tdata_s:  std_logic_vector ( 15 downto 0);
     signal ain_tlast_s:std_logic;
     
     -- outputs
     signal aout_tvalid_s: std_logic;
-    signal aout_tready_s: std_logic;
+    signal ain_tready_s: std_logic;
     signal aout_tdata_s:  std_logic_vector ( 15 downto 0);
     signal aout_tlast_s:  std_logic;
     signal num_trans: std_logic_vector(9 downto 0);
