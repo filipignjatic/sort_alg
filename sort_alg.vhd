@@ -30,7 +30,7 @@ architecture rtl of sort_alg is
   type state_type is (idle,drive_tready, collect_done, assign_first, assign_second, compare, swap_first_addr, swap_first_data, swap_second_addr, swap_second_data, increment, check, drive_tvalid,  drive_tdata);
   signal curr_state, next_state: state_type;
   -- Local signals
-  signal counter, addr, i, j: std_logic_vector(9 downto 0) := (others => '0'); -- 10 bit to represent 1024 decima
+  signal cnt, tmp_counter, addr, i, j: std_logic_vector(9 downto 0) := (others => '0'); -- 10 bit to represent 1024 decima
   signal tmp_i, tmp_j, mem_data: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
   -- Local signals for driving data
   signal write_en, read_en, start_counter,  drive_done,transfer_tmp_i, transfer_tmp_j, cnt_i, cnt_j, tvalid_ready: std_logic;
@@ -54,7 +54,7 @@ architecture rtl of sort_alg is
             if(write_en = '1') then
                 data(conv_integer(addr)) <= mem_data;
             elsif(read_en = '1') then
-                aout_tdata <= data(conv_integer(counter));
+                aout_tdata <= data(conv_integer(cnt));
             end if;
             if(transfer_tmp_i = '1') then
                 tmp_i <= data(conv_integer(i));
@@ -69,15 +69,17 @@ architecture rtl of sort_alg is
     begin
         if(rising_edge(clk)) then
             if(start_counter = '1') then
-                counter <= counter + 1;
+                cnt <= cnt + 1;
+            else
+                cnt <= (others => '0');
             end if;
             
             if(read_en = '1') then
-                if(counter /= 0) then
-                    counter <= counter -1;
+                if(cnt <= tmp_counter) then
+                    cnt <= cnt + 1;
                     drive_done <= '0';
                 else
-                    drive_done <= '1';
+                    drive_done <= '1';      
                 end if;
             end if;
         end if;
@@ -88,10 +90,10 @@ architecture rtl of sort_alg is
     begin
         if(rising_edge(clk)) then
             if(cnt_i = '1') then
-                if(j /= counter) then
+                if(j /= tmp_counter) then
                     tvalid_ready <= '0';
                     i <= i + 1;
-                    if(i = counter) then
+                    if(i = tmp_counter) then
                         i <= (others => '0');
                         j <= j + 1;
                     end if;
@@ -103,7 +105,7 @@ architecture rtl of sort_alg is
          end if;
     end process;
     
-    FSM:process(curr_state, ain_tlast, ain_tvalid, drive_done, ain_tdata, tmp_i, tmp_j, counter, i, aout_tready, tvalid_ready) is
+    FSM:process(curr_state, ain_tlast, ain_tvalid, drive_done, ain_tdata, tmp_i, tmp_j, cnt, i, aout_tready, tvalid_ready) is
     begin
     aout_tvalid <= '0';
     read_en <= '0'; 
@@ -128,15 +130,16 @@ architecture rtl of sort_alg is
         when drive_tready =>
             if(ain_tlast = '1') then
                 mem_data <= ain_tdata;
-                addr <= counter;
+                addr <= cnt;
+                tmp_counter <= cnt;
                 next_state <= collect_done;
             else
-                ain_tready <= '1';
                 mem_data <= ain_tdata;
-                addr <= counter;
+                addr <= cnt;
                 start_counter <= '1';
                 next_state <= drive_tready;
             end if;
+            ain_tready <= '1';
             write_en <= '1';
         when collect_done =>
             next_state <= assign_first;
@@ -147,7 +150,7 @@ architecture rtl of sort_alg is
             transfer_tmp_j <= '1';
            next_state <= compare;
         when compare =>
-            if(tmp_i < tmp_j) then
+            if(tmp_i > tmp_j) then
                 next_state <= swap_first_addr;
             else
                 next_state <= increment;
