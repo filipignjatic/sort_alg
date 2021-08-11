@@ -12,7 +12,7 @@ architecture beh of top_tb is
     signal rst_s: std_logic;
     
     -- Local signals for counter and decrement
-    signal data_signal: std_logic_vector(15 downto 0) := "0000000000111111";
+    signal data_signal: std_logic_vector(15 downto 0) := X"00FF";
     signal counter: std_logic_vector(9 downto 0) := (others => '0');
     
     -- Inputs
@@ -76,9 +76,6 @@ architecture beh of top_tb is
             if(rising_edge(clk_s)) then
                 if(counter >= X"1" and ain_tvalid_s = '1') then
                     data_signal <= data_signal - 1;
-                if(data_signal = X"0") then
-                    data_signal <= X"00FF";
-                end if;
                 end if;
             end if;
         end process;
