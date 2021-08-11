@@ -1,5 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity top_tb is
 end entity top_tb;
@@ -8,6 +10,9 @@ architecture beh of top_tb is
 	signal clk_s: std_logic;
     signal rst_s: std_logic;
     
+    signal data_signal: std_logic_vector(15 downto 0) := "0000000000111111";
+    signal data_subb: std_logic_vector(15 downto 0) := "0000000000000001";
+    signal counter: std_logic_vector(9 downto 0) := (others => '0');
     signal ain_tvalid_s: std_logic;
     signal ain_tready_s: std_logic;
     signal ain_tdata_s:  std_logic_vector ( 15 downto 0);
@@ -61,57 +66,42 @@ architecture beh of top_tb is
             wait;
         end process;
         
-        stim_gen: process
+        
+        
+        decrement:process(clk_s) is
         begin
-        wait for 50ns;
-        ain_tvalid_s <= '0';
-        ain_tlast_s <= '0';
-        ain_tdata_s <= (others => '0');
-        wait for 100ns;
-        ain_tvalid_s <= '1';
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"3";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"5";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"4";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"8";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"2";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"A";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"9";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"4";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"8";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"2";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"A";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"9";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        wait until rising_edge(clk_s);
-        ain_tdata_s (3 downto 0) <= x"1";
-        ain_tdata_s (15 downto 4) <= (others => '0');
-        ain_tlast_s <= '1';
-        wait until rising_edge(clk_s);
-        ain_tlast_s <= '0';
-        ain_tvalid_s <= '0';
-        wait;
+            if(rising_edge(clk_s)) then
+                if(counter >= X"1" and ain_tvalid_s = '1') then
+                    data_signal <= data_signal - 1;
+                if(data_signal = X"0") then
+                    data_signal <= X"00FF";
+                end if;
+                end if;
+            end if;
+        end process;
+        
+        stim_gen: process(clk_s) is
+        begin
+            if(rising_edge(clk_s)) then
+                if(counter = X"0") then
+                    ain_tvalid_s <= '0';
+                    ain_tlast_s <= '0';
+                    ain_tdata_s <= (others => '0');
+                    counter <= counter + 1;
+                elsif(counter = x"1") then
+                    ain_tvalid_s <= '1';
+                    counter <= counter + 1;
+                elsif(counter < X"100" and counter > X"1") then
+                    counter <= counter + 1;
+                    ain_tdata_s <= data_signal;
+                elsif(counter = X"100") then
+                    counter <= counter + 1;
+                    ain_tdata_s <= data_signal;
+                    ain_tlast_s <= '1';
+                else
+                    ain_tvalid_s <= '0';
+                    ain_tlast_s <= '0';
+                end if;
+            end if;
         end process;
 end architecture beh;
