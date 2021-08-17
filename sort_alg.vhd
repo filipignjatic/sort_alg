@@ -51,9 +51,6 @@ architecture rtl of sort_alg is
   	MEMORY_PROC:process(clk) is 
     begin
         if(rising_edge(clk)) then
-	    if(rst = '0') then
-	      aout_tdata <= (others => '0');
-	    end if;
             if(write_en = '1') then
                 data(conv_integer(addr)) <= mem_data;
             elsif(read_en = '1') then
