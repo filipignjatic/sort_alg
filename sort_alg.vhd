@@ -33,7 +33,7 @@ architecture rtl of sort_alg is
   signal cnt, tmp_counter, addr, i, j: std_logic_vector(9 downto 0) := (others => '0'); -- 10 bit to represent 1024 decima
   signal tmp_i, tmp_j, mem_data: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
   -- Local signals for driving data
-  signal write_en, read_en, start_counter,  drive_done,transfer_tmp_i, transfer_tmp_j, cnt_i, cnt_j, tvalid_ready: std_logic;
+  signal write_en, read_en, start_counter,  drive_done,transfer_tmp_i, transfer_tmp_j, cnt_check, tvalid_ready: std_logic;
    
   begin
   
@@ -51,6 +51,9 @@ architecture rtl of sort_alg is
   	MEMORY_PROC:process(clk) is 
     begin
         if(rising_edge(clk)) then
+	    if(rst = '0') then
+	      aout_tdata <= (others => '0');
+	    end if;
             if(write_en = '1') then
                 data(conv_integer(addr)) <= mem_data;
             elsif(read_en = '1') then
@@ -76,25 +79,30 @@ architecture rtl of sort_alg is
             end if;
             
             if(read_en = '1') then
-                if(cnt <= tmp_counter) then
+                if(cnt < tmp_counter-1) then
                     cnt <= cnt + 1;
                     drive_done <= '0';
                 else
                     drive_done <= '1';      
+		    tmp_counter <= (others => '0');
                 end if;
             end if;
-        end if;
+            
+            if(curr_state = idle) then
+	      drive_done <= '0';
+	    end if;
+          end if;
     end process;
     
     
     INC_PROC: process(clk) is 
     begin
         if(rising_edge(clk)) then
-            if(cnt_i = '1') then
-                if(j /= tmp_counter) then
+            if(cnt_check = '1') then
+                if(j /= tmp_counter-1) then
                     tvalid_ready <= '0';
                     i <= i + 1;
-                    if(i = tmp_counter) then
+                    if(i = tmp_counter-2) then
                         i <= (others => '0');
                         j <= j + 1;
                     end if;
@@ -118,7 +126,7 @@ architecture rtl of sort_alg is
     aout_tlast <= '0';
     mem_data <= (others => '0');
     addr <= (others => '0');
-    cnt_i <= '0';
+    cnt_check <= '0';
     case curr_state is
         when idle =>
             read_en <= '0';
@@ -172,7 +180,7 @@ architecture rtl of sort_alg is
             write_en <= '1';
             next_state <= increment;
         when increment =>
-            cnt_i <= '1';
+            cnt_check <= '1';
             next_state <= check;
         when check =>
             if(tvalid_ready = '1') then
@@ -187,11 +195,10 @@ architecture rtl of sort_alg is
             aout_tvalid <= '1';
             if(aout_tready = '1') then
                 read_en <= '1';
-            else
-                read_en <= '0';
             end if;
             if(drive_done = '1') then
                 aout_tlast <= '1';
+                read_en <= '0';
                 next_state <= idle;
             else
                 next_state <= drive_tdata;
