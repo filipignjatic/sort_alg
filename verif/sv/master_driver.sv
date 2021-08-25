@@ -81,7 +81,7 @@ task master_driver::process_item(trans_item item);
   m_vif.ain_tvalid  = 1'b1;
   @(posedge m_vif.ain_tready);
   for(int i = 0; i < item.num_data; i ++ ) begin
-    m_vif.ain_tdata = $urandom_range(1, 500);
+    m_vif.ain_tdata = $urandom_range(1, 'hFFFF);
     if(i == item.num_data - 1) begin
       m_vif.ain_tlast = 1'b1;
     end
