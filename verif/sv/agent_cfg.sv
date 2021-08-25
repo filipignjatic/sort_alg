@@ -5,13 +5,11 @@ class agent_cfg extends uvm_object;
 
   // configuration fields
   uvm_active_passive_enum m_is_active = UVM_ACTIVE;
-  bit m_has_checks;
   bit m_has_coverage;
 
   // registration macro
   `uvm_object_utils_begin(agent_cfg)
     `uvm_field_enum(uvm_active_passive_enum, m_is_active, UVM_ALL_ON)
-    `uvm_field_int(m_has_checks, UVM_ALL_ON)
     `uvm_field_int(m_has_coverage, UVM_ALL_ON)
   `uvm_object_utils_end
 
