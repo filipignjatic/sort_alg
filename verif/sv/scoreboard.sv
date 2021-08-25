@@ -64,9 +64,9 @@ task scoreboard::run_phase(uvm_phase phase);
 	data_out.push_front(aout_clone.aout_tdata[i]);
 	
     foreach(data_in[i])
-      `uvm_info("DATA IN SCOREBOARD", $sformatf("DATA: %d\n", data_in[i]), UVM_HIGH)
-    foreach(data_in[i])
-      `uvm_info("DATA OUT SCOREBOARD", $sformatf("DATA: %d\n", data_out[i]), UVM_HIGH)
+       `uvm_info("DATA IN SCOREBOARD", $sformatf("DATA: %d\n", data_in[i]), UVM_HIGH)
+    foreach(data_out[i])
+       `uvm_info("DATA OUT SCOREBOARD", $sformatf("DATA: %d\n", data_out[i]), UVM_HIGH)
     assert_length_ain_aout: assert(data_out.size() == data_in.size());
     for(int i =0; i < data_out.size(); i++) begin
       check_sorted_data: assert(data_in[i] == data_out[i]);
