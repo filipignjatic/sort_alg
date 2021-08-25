@@ -35,7 +35,7 @@ endfunction : new
 // build phase
 function void test_base::build_phase(uvm_phase phase);
   super.build_phase(phase);
-
+  
   // create component
   m_top_env = top_env::type_id::create("m_top_env", this);
 
@@ -69,11 +69,11 @@ function void test_base::set_default_configuration();
   m_cfg.m_uvc_cfg.has_slave_agent = 1;
   // master configuration
   m_cfg.m_uvc_cfg.m_master_agent_cfg.m_is_active = UVM_ACTIVE;
-  m_cfg.m_uvc_cfg.m_master_agent_cfg.m_has_checks = 0;
+  m_cfg.m_uvc_cfg.m_master_agent_cfg.m_has_coverage = 1;
 
   // slave configuration
   m_cfg.m_uvc_cfg.m_slave_agent_cfg.m_is_active = UVM_ACTIVE;
-  m_cfg.m_uvc_cfg.m_slave_agent_cfg.m_has_checks = 0;
+  m_cfg.m_uvc_cfg.m_slave_agent_cfg.m_has_coverage = 1;
 endfunction : set_default_configuration
 
 `endif // TEST_BASE_SV
