@@ -19,7 +19,7 @@ class slave_agent extends uvm_agent;
   slave_monitor m_monitor;
   slave_driver m_driver;
   uvc_sequencer m_sequencer;
-  
+  slave_cov m_cov;
   // constructor
   extern function new(string name, uvm_component parent);
   // build phase
@@ -61,9 +61,9 @@ function void slave_agent::build_phase(uvm_phase phase);
     m_sequencer = uvc_sequencer::type_id::create("m_sequencer", this);
   end
   m_monitor = slave_monitor::type_id::create("m_monitor", this);
-//   if (m_cfg.m_has_coverage == 1) begin
-//     m_cov = uart_uvc_cov::type_id::create("m_cov", this);
-//   end  
+  if (m_cfg.m_has_coverage == 1) begin
+     m_cov = slave_cov::type_id::create("m_cov", this);
+  end  
 endfunction : build_phase
 
 // connect phase
@@ -75,9 +75,9 @@ function void slave_agent::connect_phase(uvm_phase phase);
     m_driver.seq_item_port.connect(m_sequencer.seq_item_export);
   end
   m_monitor.m_aport.connect(m_aport);
-//   if (m_cfg.m_has_coverage == 1) begin
-//     m_monitor.m_aport.connect(m_cov.analysis_export);
-//   end
+  if (m_cfg.m_has_coverage == 1) begin
+    m_monitor.m_aport.connect(m_cov.analysis_export);
+  end
   
   // assign interface
   if (m_cfg.m_is_active == UVM_ACTIVE) begin
@@ -91,9 +91,9 @@ function void slave_agent::connect_phase(uvm_phase phase);
     m_sequencer.m_cfg = m_cfg;
   end
   m_monitor.s_cfg = m_cfg;
-//   if (m_cfg.m_has_coverage == 1) begin
-//     m_cov.m_cfg = m_cfg;
-//   end
+  if (m_cfg.m_has_coverage == 1) begin
+    m_cov.m_cfg = m_cfg;
+  end
 endfunction : connect_phase
 
 // print configuration
