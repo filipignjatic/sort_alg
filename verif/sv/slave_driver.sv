@@ -78,11 +78,9 @@ task slave_driver::process_item(trans_item item);
   // Driving data
   @(posedge m_vif.aout_tvalid);
   @(posedge m_vif.clock);
-    m_vif.aout_tready = 1'b1;
-  while(m_vif.aout_tlast == 0 && m_vif.aout_tvalid == 1) begin
-    item.aout_tdata.push_back(m_vif.aout_tdata);
-    @(posedge m_vif.clock);
-  end
+  m_vif.aout_tready = 1'b1;
+  @(posedge m_vif.aout_tlast);
+  @(posedge m_vif.clock);
   m_vif.aout_tready = 1'b0;
   
   
