@@ -31,7 +31,7 @@ architecture rtl of sort_alg is
   signal curr_state, next_state: state_type;
   -- Local signals
   signal cnt, tmp_counter, addr, i, j: std_logic_vector(9 downto 0) := (others => '0'); -- 10 bit to represent 1024 decima
-  signal tmp_i, tmp_j, mem_data: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
+  signal tmp_i, tmp_j, mem_data, out_mem_data: std_logic_vector(15 downto 0); -- Signals for temp values of data(i) and data(i+1)
   -- Local signals for driving data
   signal write_en, read_en, start_counter,  drive_done,transfer_tmp_i, transfer_tmp_j, cnt_check, tvalid_ready: std_logic;
    
@@ -53,8 +53,9 @@ architecture rtl of sort_alg is
         if(rising_edge(clk)) then
             if(write_en = '1') then
                 data(conv_integer(addr)) <= mem_data;
-            elsif(read_en = '1') then
-                aout_tdata <= data(conv_integer(cnt));
+            end if;
+            if(read_en = '1') then
+                out_mem_data <= data(conv_integer(cnt));
             end if;
             if(transfer_tmp_i = '1') then
                 tmp_i <= data(conv_integer(i));
@@ -71,7 +72,9 @@ architecture rtl of sort_alg is
             if(start_counter = '1') then
                 cnt <= cnt + 1;
                 tmp_counter <= tmp_counter + 1;
-            else
+            end if;
+            
+            if(ain_tlast = '1' or drive_done = '1') then
                 cnt <= (others => '0');
             end if;
             
@@ -122,6 +125,7 @@ architecture rtl of sort_alg is
     ain_tready <= '0';
     aout_tlast <= '0';
     mem_data <= (others => '0');
+    aout_tdata <= (others => '0');
     addr <= (others => '0');
     cnt_check <= '0';
     case curr_state is
@@ -182,21 +186,27 @@ architecture rtl of sort_alg is
         when check =>
             if(tvalid_ready = '1') then
                 next_state <= drive_tvalid;
+                read_en <= '1';
             else
                 next_state <= assign_first;
             end if;
         when drive_tvalid =>
+            if(aout_tready = '1') then
+                next_state <= drive_tdata;
+                read_en <= '1';
+            else
+                next_state <= drive_tvalid;                            
+            end if;
             aout_tvalid <= '1';
-            next_state <= drive_tdata;
+            aout_tdata <= out_mem_data;   
         when drive_tdata =>
             aout_tvalid <= '1';
-            if(aout_tready = '1') then
-                read_en <= '1';
-            end if;
+            read_en <= '1';
+            aout_tdata <= out_mem_data;
             if(drive_done = '1') then
                 aout_tlast <= '1';
-                read_en <= '0';
                 next_state <= idle;
+                read_en <= '0';
             else
                 next_state <= drive_tdata;
             end if;
