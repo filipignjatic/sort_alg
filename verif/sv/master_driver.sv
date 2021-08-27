@@ -79,13 +79,17 @@ task master_driver::process_item(trans_item item);
 
   // Driving data
   m_vif.ain_tvalid  = 1'b1;
-  @(posedge m_vif.ain_tready);
-  for(int i = 0; i < item.num_data; i ++ ) begin
-    m_vif.ain_tdata = $urandom_range(1, 'hFFFF);
-    if(i == item.num_data - 1) begin
-      m_vif.ain_tlast = 1'b1;
+  m_vif.ain_tdata = $urandom_range(1, 'hFFFF);
+  @(m_vif.ain_tready);
+  @(posedge m_vif.clock);
+  if(m_vif.ain_tready == 1) begin
+    for(int i = 0; i < item.num_data-1; i ++ ) begin
+      m_vif.ain_tdata = $urandom_range(1, 'hFFFF);
+      if(i == item.num_data - 2) begin
+	m_vif.ain_tlast = 1'b1;
+      end
+      @(posedge m_vif.clock);
     end
-    @(posedge m_vif.clock);
    end
    m_vif.ain_tlast = 1'b0;
    m_vif.ain_tvalid = 1'b0;
