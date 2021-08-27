@@ -76,11 +76,10 @@ task master_monitor::collect_item();
   wait (m_vif.reset_n);
   `uvm_info(get_type_name(), "Reset de-asserted. Starting to collect items...", UVM_HIGH)
     forever begin
-      // Collect item
-      @(posedge m_vif.ain_tready);
-      while(m_vif.ain_tready == 1'b1 && m_vif.ain_tlast == 0) begin
-	@(posedge m_vif.clock);
+      @(m_vif.ain_tready && m_vif.ain_tvalid);
+      while(m_vif.ain_tready == 1'b1 && m_vif.ain_tvalid == 1'b1) begin
 	item.ain_tdata.push_back(m_vif.ain_tdata);
+	@(posedge m_vif.clock);
       end
       `uvm_info(get_type_name(), $sformatf("Item collected: \n%s", item.sprint()), UVM_HIGH)
       $cast(clone_item, item);
