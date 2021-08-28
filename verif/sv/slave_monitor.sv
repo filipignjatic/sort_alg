@@ -76,7 +76,7 @@ task slave_monitor::collect_item();
   wait (m_vif.reset_n);
   `uvm_info(get_type_name(), "Reset de-asserted. Starting to collect items...", UVM_HIGH)
    forever begin
-      @(m_vif.aout_tready && m_vif.aout_tavlid);
+      @(m_vif.aout_tready && m_vif.aout_tvalid);
       @(posedge m_vif.clock);
       while(m_vif.aout_tready == 1'b1 && m_vif.aout_tvalid == 1'b1) begin
 	item.aout_tdata.push_back(m_vif.aout_tdata);
