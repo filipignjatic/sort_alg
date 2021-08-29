@@ -67,6 +67,9 @@ endtask : run_phase
 task master_driver::handle_reset();
     // wait reset assertion
     @(m_vif.reset_n iff m_vif.reset_n == 0);
+    m_vif.ain_tvalid = 1'b0;
+    m_vif.ain_tlast = 1'b0;
+    m_vif.ain_tdata = 16'b0;
     `uvm_info(get_type_name(), "Reset asserted.", UVM_HIGH)
 endtask : handle_reset
 
