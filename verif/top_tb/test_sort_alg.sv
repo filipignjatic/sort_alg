@@ -57,7 +57,8 @@ task test_sort_alg::run_phase(uvm_phase phase);
   `uvm_info(get_type_name(), "TEST STARTED", UVM_LOW)
   
   trans_num = $urandom_range(1, 50);
-  
+  #1us;
+	
   fork: slave
   begin
       forever begin
