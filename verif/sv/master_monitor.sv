@@ -67,6 +67,7 @@ endtask : run_phase
 task master_monitor::handle_reset();
     // wait reset assertion
     @(m_vif.reset_n iff m_vif.reset_n == 0);
+    item.ain_tdata.delete();
     `uvm_info(get_type_name(), "Reset asserted.", UVM_HIGH)
 endtask : handle_reset
 
