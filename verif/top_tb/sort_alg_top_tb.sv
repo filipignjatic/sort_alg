@@ -45,6 +45,8 @@ module sort_alg_top_tb;
     reset_n <= 1'b0;
     clock <= 1'b1;
     #500 reset_n <= 1'b1;
+    #20 reset_n <= 1'b0;
+    #20 reset_n <= 1'b1;
   end
   
   // generate clock
