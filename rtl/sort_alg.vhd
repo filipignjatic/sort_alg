@@ -114,7 +114,7 @@ architecture rtl of sort_alg is
          end if;
     end process;
     
-    FSM:process(curr_state, ain_tlast, ain_tvalid, drive_done, ain_tdata, tmp_i, tmp_j, cnt, i, aout_tready, tvalid_ready) is
+    FSM:process(curr_state, ain_tlast, ain_tvalid, drive_done, ain_tdata, tmp_i, tmp_j, cnt, i, aout_tready, tvalid_ready, out_mem_data) is
     begin
     aout_tvalid <= '0';
     read_en <= '0'; 
